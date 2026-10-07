@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", "Segoe UI", sans-serif;
+  --color-ink-950: #17202d;
+  --color-ink-900: #202b3b;
+  --color-ink-700: #4c5b70;
+  --color-ink-500: #7b8798;
+  --color-cloud-50: #f8fafc;
+  --color-cloud-100: #f1f5f9;
+  --color-cloud-200: #e5eaf0;
+  --color-brand-50: #eef7ff;
+  --color-brand-100: #d9edff;
+  --color-brand-500: #1683d8;
+  --color-brand-600: #0f6fbd;
+  --color-brand-700: #0b5b9e;
+  --color-success-50: #effbf5;
+  --color-success-600: #138a5b;
+  --color-warning-50: #fff8eb;
+  --color-warning-600: #b66a00;
+  --color-danger-50: #fff1f2;
+  --color-danger-600: #c2414d;
+  --radius-panel: 14px;
+  --shadow-panel: 0 1px 2px rgb(23 32 45 / 0.03), 0 8px 24px rgb(23 32 45 / 0.04);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f8fafc;
+  color: #202b3b;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: #d9edff;
+  color: #17202d;
+}
