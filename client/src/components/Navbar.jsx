@@ -1,13 +1,15 @@
 ﻿import { useState, useEffect } from "react";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Menu, Plus } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
 import { useNavigate } from "react-router-dom";
 import { getDisplayName } from "../utils/auth";
 import MeetwiseLogo from "./MeetwiseLogo";
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick = () => {} }) => {
   const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState(() => getDisplayName() || "Account");
+  const [displayName, setDisplayName] = useState(
+    () => getDisplayName() || "Account"
+  );
 
   useEffect(() => {
     const update = () => setDisplayName(getDisplayName() || "Account");
@@ -17,14 +19,24 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-sm sm:px-6 lg:px-10">
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white shadow-sm">
-          <MeetwiseLogo size={25} />
-        </div>
-        <div className="hidden sm:block">
-          <p className="text-sm font-black tracking-tight text-slate-900">Meetwise</p>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Meeting intelligence</p>
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Open menu"
+          className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 lg:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white shadow-sm">
+            <MeetwiseLogo size={25} />
+          </div>
+          <p className="text-sm font-black tracking-tight text-slate-900">
+            Meetwise
+          </p>
         </div>
       </div>
 
@@ -32,9 +44,9 @@ const Navbar = () => {
         <button
           type="button"
           onClick={() => navigate("/meetings/new")}
-          className="hidden items-center gap-2 rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition duration-200 hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:inline-flex"
+          className="hidden items-center gap-2 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-bold text-white shadow-sm transition duration-200 hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:inline-flex"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           New meeting
         </button>
 
@@ -54,10 +66,13 @@ const Navbar = () => {
             {displayName}
           </span>
 
-          <ChevronDown className="h-4 w-4 text-slate-500" />
+          <ChevronDown
+            className="hidden h-4 w-4 text-slate-500 sm:block"
+            aria-hidden="true"
+          />
         </button>
       </div>
-    </nav>
+    </header>
   );
 };
 
