@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import styled, { keyframes, css } from "styled-components";
+import styled from "styled-components";
 import MeetwiseLogo from "../components/MeetwiseLogo";
 
 function Login() {
@@ -8,29 +8,8 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const [isAccessGranted, setIsAccessGranted] = useState(false);
-  const [isSwiping, setIsSwiping] = useState(false);
-
-  const handleKeycardAccess = () => {
-    if (isAccessGranted || isSwiping) return;
-
-    setIsSwiping(true);
-    setError("");
-
-    setTimeout(() => {
-      setIsSwiping(false);
-      setIsAccessGranted(true);
-    }, 700);
-  };
-
-  const resetElevator = () => {
-    setIsAccessGranted(false);
-    setError("");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +34,7 @@ function Login() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(data.message || "Invalid email or password");
@@ -67,7 +46,12 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "Something went wrong. Please try again.");
+
+      setError(
+        err instanceof TypeError
+          ? "Can't reach the server. Make sure it's running on port 5000."
+          : err.message || "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -75,123 +59,71 @@ function Login() {
 
   return (
     <Page>
-      <Header>
-        <BackButton onClick={resetElevator} title="Lock Doors / Reset">
-          ←
-        </BackButton>
-        <Title><MeetwiseLogo size={28} /> Meetwise Express Elevator</Title>
-        <HeaderSpacer />
-      </Header>
+      <Glow aria-hidden="true" />
+
+      <TopBar>
+        <Brand to="/">
+          <BrandMark>
+            <MeetwiseLogo size={27} />
+          </BrandMark>
+          <BrandName>Meetwise</BrandName>
+        </Brand>
+
+        <TopText>
+          <TopHint>New here?</TopHint>{" "}
+          <InlineLink to="/register">Create account</InlineLink>
+        </TopText>
+      </TopBar>
 
       <Main>
-        <ElevatorFrame>
-          <FloorDisplayArea>
-            <DirectionArrow $active={isAccessGranted}>▲</DirectionArrow>
-            <FloorNumber $active={isAccessGranted}>
-              {isAccessGranted ? "FL 77" : "LOBBY"}
-            </FloorNumber>
-            <StatusText $active={isAccessGranted}>
-              {isAccessGranted ? "AUTHORIZED" : "RESTRICTED"}
-            </StatusText>
-          </FloorDisplayArea>
+        <FormCard>
+          <FormTitle>Welcome back</FormTitle>
+          <FormDescription>
+            Log in to view your meetings, summaries and action items.
+          </FormDescription>
 
-          <ElevatorShaft>
-            <DoorLeft $isOpen={isAccessGranted} />
-            <DoorRight $isOpen={isAccessGranted} />
+          <Form onSubmit={handleSubmit} noValidate>
+            <Field>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+              />
+            </Field>
 
-            {!isAccessGranted && (
-              <AccessOverlay>
-                <KeycardReader onClick={handleKeycardAccess}>
-                  <SensorLight $isSwiping={isSwiping} />
-                  <CardSlot />
-                  <SwipePrompt>
-                    {isSwiping ? "VERIFYING KEYCARD..." : "TAP KEYCARD TO ACCESS"}
-                  </SwipePrompt>
-                  <CardGraphic $isSwiping={isSwiping}>
-                    <span>PASS</span>
-                  </CardGraphic>
-                </KeycardReader>
-              </AccessOverlay>
-            )}
+            <Field>
+              <LabelRow>
+                <Label htmlFor="password">Password</Label>
+                <ForgotLink to="/forgot-password">Forgot password?</ForgotLink>
+              </LabelRow>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+            </Field>
 
-            <LoginSection $isOpen={isAccessGranted}>
-              <LoginCard>
-                <FormHeader>
-                  <SmallText>Executive Floor Access</SmallText>
-                  <FormTitle>Sign In</FormTitle>
-                  <FormDescription>
-                    Provide credentials for deck authorization
-                  </FormDescription>
-                </FormHeader>
+            {error && <ErrorMessage role="alert">{error}</ErrorMessage>}
 
-                <Form onSubmit={handleSubmit}>
-                  <Field>
-                    <Label htmlFor="email">Work Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="name@company.com"
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={!isAccessGranted || loading}
-                    />
-                  </Field>
+            <SubmitButton type="submit" disabled={loading}>
+              {loading ? "Logging in..." : "Log in"}
+            </SubmitButton>
+          </Form>
 
-                  <Field>
-                    <Label htmlFor="password">Passcode</Label>
-                   <Input
-  id="password"
-  type="password"
-  placeholder="••••••••"
-  value={password}
-  onChange={(e) => setPassword(e.target.value)}
-  autoComplete="current-password"
-  required
-  disabled={!isAccessGranted || loading}
-/>
-                  </Field>
-
-                  {error && <ErrorMessage>{error}</ErrorMessage>}
-
-                 <FormOptions>
-  <RememberMe>
-    <Checkbox
-      type="checkbox"
-      disabled={!isAccessGranted || loading}
-    />
-    <RememberText>Stay Logged In</RememberText>
-  </RememberMe>
-
-  <ForgotLink to="/forgot-password">
-    Forgot password?
-  </ForgotLink>
-</FormOptions>
-
-                  <ElevatorButton
-                    type="submit"
-                    disabled={!isAccessGranted || loading}
-                  >
-                    {loading ? "ASCENDING..." : "ASCEND TO DASHBOARD"}
-                  </ElevatorButton>
-
-                  <SignupText>
-                    New crew member?{" "}
-                    <SignupLink
-                      to="/register"
-                      onClick={(e) => {
-                        if (!isAccessGranted || loading) e.preventDefault();
-                      }}
-                    >
-                      Request Keycard
-                    </SignupLink>
-                  </SignupText>
-                </Form>
-              </LoginCard>
-            </LoginSection>
-          </ElevatorShaft>
-        </ElevatorFrame>
+          <BottomText>
+            Don't have an account?{" "}
+            <InlineLink to="/register">Create one</InlineLink>
+          </BottomText>
+        </FormCard>
       </Main>
     </Page>
   );
@@ -199,392 +131,202 @@ function Login() {
 
 export default Login;
 
-
-const swipeMotion = keyframes`
-  0% { transform: translateY(0); }
-  50% { transform: translateY(18px); }
-  100% { transform: translateY(0); }
-`;
-
+/* ---------- Styles (match Register.jsx) ---------- */
 
 const Page = styled.div`
+  position: relative;
   min-height: 100vh;
   width: 100%;
-  background: radial-gradient(circle at 50% 30%, #1a2230 0%, #080c14 100%);
-  color: white;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0e131c, #080b11 60%, #05070a);
 `;
 
-const Header = styled.header`
-  height: 80px;
-  display: grid;
-  grid-template-columns: 80px 1fr 80px;
-  align-items: center;
-  padding: 0 30px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 15, 25, 0.5);
-  backdrop-filter: blur(10px);
+const Glow = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(50, 150, 255, 0.22),
+    transparent 45%
+  );
 `;
 
-const BackButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: #00f0ff;
-  }
-`;
-
-const Title = styled.h1`
-  margin: 0;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #c0c9d6;
-`;
-
-const HeaderSpacer = styled.div``;
-
-const Main = styled.main`
-  min-height: calc(100vh - 80px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-`;
-
-
-const ElevatorFrame = styled.div`
-  width: 440px;
-  background: linear-gradient(180deg, #2b323d 0%, #181d24 100%);
-  border-radius: 20px;
-  padding: 24px;
-  border: 2px solid #3d4654;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
-
-const FloorDisplayArea = styled.div`
-  background: #090d14;
-  border-radius: 10px;
-  padding: 12px 20px;
-  border: 1px solid #232d3d;
+const TopBar = styled.header`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-`;
+  padding: 0 32px;
 
-const DirectionArrow = styled.span`
-  font-size: 18px;
-  color: ${({ $active }) => ($active ? "#00f0ff" : "#3b485d")};
-  text-shadow: ${({ $active }) => ($active ? "0 0 10px #00f0ff" : "none")};
-  transition: all 0.5s ease;
-`;
-
-const FloorNumber = styled.span`
-  font-family: monospace;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: ${({ $active }) => ($active ? "#00f0ff" : "#ff4d4d")};
-  text-shadow: ${({ $active }) =>
-    $active ? "0 0 12px rgba(0, 240, 255, 0.6)" : "0 0 12px rgba(255, 77, 77, 0.6)"};
-  transition: all 0.5s ease;
-`;
-
-const StatusText = styled.span`
-  font-size: 11px;
-  letter-spacing: 1px;
-  font-weight: 600;
-  color: ${({ $active }) => ($active ? "#4cd964" : "#ff9500")};
-`;
-
-const ElevatorShaft = styled.div`
-  position: relative;
-  width: 100%;
-  min-height: 460px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #0f141c;
-  border: 1px solid #28303d;
-`;
-
-
-const DoorStyles = css`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  background: linear-gradient(
-    90deg,
-    #2c3340 0%,
-    #3d4757 50%,
-    #212733 100%
-  );
-  z-index: 5;
-  transition: transform 0.9s cubic-bezier(0.77, 0, 0.175, 1);
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: rgba(255, 255, 255, 0.1);
+  @media (max-width: 500px) {
+    padding: 0 18px;
   }
 `;
 
-const DoorLeft = styled.div`
-  ${DoorStyles}
-  left: 0;
-  border-right: 1px solid #141820;
-  transform: ${({ $isOpen }) => ($isOpen ? "translateX(-100%)" : "translateX(0)")};
-
-  &::after { right: 0; }
+const Brand = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
 `;
 
-const DoorRight = styled.div`
-  ${DoorStyles}
-  right: 0;
-  border-left: 1px solid #141820;
-  transform: ${({ $isOpen }) => ($isOpen ? "translateX(100%)" : "translateX(0)")};
-
-  &::after { left: 0; }
-`;
-
-
-const AccessOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 10;
+const BrandMark = styled.div`
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 9px;
+  background: #1683d8;
 `;
 
-const KeycardReader = styled.div`
-  width: 220px;
-  background: #18202c;
-  padding: 24px;
-  border-radius: 14px;
-  border: 1px solid #303c4f;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+const BrandName = styled.span`
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+`;
+
+const TopText = styled.p`
+  font-size: 13px;
+  color: #9aa7b8;
+`;
+
+const TopHint = styled.span`
+  @media (max-width: 500px) {
+    display: none;
+  }
+`;
+
+const InlineLink = styled(Link)`
+  font-weight: 700;
+  color: #6cc3ff;
+  text-decoration: none;
 
   &:hover {
-    transform: translateY(-2px);
-    border-color: #00f0ff;
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #6cc3ff;
+    outline-offset: 3px;
+    border-radius: 4px;
   }
 `;
 
-const SensorLight = styled.div`
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: ${({ $isSwiping }) => ($isSwiping ? "#4cd964" : "#ff3b30")};
-  box-shadow: 0 0 10px ${({ $isSwiping }) => ($isSwiping ? "#4cd964" : "#ff3b30")};
-  transition: all 0.3s ease;
-`;
-
-const CardSlot = styled.div`
-  width: 140px;
-  height: 6px;
-  background: #0a0d12;
-  border-radius: 3px;
-  border-bottom: 1px solid #3a475a;
-`;
-
-const SwipePrompt = styled.p`
-  margin: 0;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: #9aaec4;
-  text-align: center;
-`;
-
-const CardGraphic = styled.div`
-  width: 100px;
-  height: 60px;
-  background: linear-gradient(135deg, #00f0ff, #0066ff);
-  border-radius: 6px;
-  display: flex;
-  align-items: flex-end;
-  padding: 8px;
-  box-sizing: border-box;
-
-  span {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    color: #000;
-  }
-
-  ${({ $isSwiping }) =>
-    $isSwiping &&
-    css`
-      animation: ${swipeMotion} 0.6s ease-in-out infinite;
-    `}
-`;
-
-
-const LoginSection = styled.div`
-  height: 100%;
-  width: 100%;
-  padding: 24px;
-  box-sizing: border-box;
-  opacity: ${({ $isOpen }) => ($isOpen ? 1 : 0)};
-  transition: opacity 0.6s ease 0.3s;
+const Main = styled.main`
+  position: relative;
+  min-height: 100vh;
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 96px 20px 56px;
 `;
 
-const LoginCard = styled.div`
+const FormCard = styled.div`
   width: 100%;
+  max-width: 420px;
+  padding: 34px;
+  border-radius: 24px;
+  background: rgba(20, 28, 41, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.45),
+    inset 0 1px rgba(255, 255, 255, 0.07);
+
+  @media (max-width: 500px) {
+    padding: 26px 22px;
+  }
 `;
 
-const FormHeader = styled.div`
-  margin-bottom: 20px;
-`;
+const FormTitle = styled.h1`
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
 
-const SmallText = styled.p`
-  margin: 0 0 4px;
-  font-size: 11px;
-  color: #00f0ff;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 600;
-`;
-
-const FormTitle = styled.h2`
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #ffffff;
+  @media (max-width: 500px) {
+    font-size: 24px;
+  }
 `;
 
 const FormDescription = styled.p`
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #7e8e9f;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #9aa7b8;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  margin-top: 26px;
 `;
 
 const Field = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+`;
+
+const LabelRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const Label = styled.label`
-  font-size: 12px;
-  color: #aebccb;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #283342;
-  outline: none;
-  background: rgba(15, 22, 33, 0.8);
-  color: white;
-  font-size: 14px;
-  transition: all 0.2s ease;
-
-  &::placeholder { color: #485668; }
-
-  &:focus {
-    border-color: #00f0ff;
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-    background: rgba(20, 30, 45, 0.9);
-  }
-`;
-
-const ErrorMessage = styled.div`
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: rgba(255, 59, 48, 0.15);
-  border: 1px solid rgba(255, 59, 48, 0.3);
-  color: #ff8080;
-  font-size: 12px;
-`;
-
-const FormOptions = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const RememberMe = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-`;
-
-const Checkbox = styled.input`
-  accent-color: #00f0ff;
-`;
-
-const RememberText = styled.span`
-  font-size: 12px;
-  color: #7e8e9f;
+  font-size: 13px;
+  color: #c4cedb;
 `;
 
 const ForgotLink = styled(Link)`
-  color: #00f0ff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
+  color: #6cc3ff;
   text-decoration: none;
-  cursor: pointer;
 
   &:hover {
     text-decoration: underline;
   }
+
+  &:focus-visible {
+    outline: 2px solid #6cc3ff;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
 `;
 
-const ElevatorButton = styled.button`
+const Input = styled.input`
   width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #00f0ff 0%, #0072ff 100%);
-  color: #000;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 13px 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.35);
+  &::placeholder {
+    color: #8392a5;
+  }
+
+  &:focus {
+    border-color: rgba(108, 195, 255, 0.75);
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 0 3px rgba(80, 170, 255, 0.16);
   }
 
   &:disabled {
@@ -593,16 +335,52 @@ const ElevatorButton = styled.button`
   }
 `;
 
-const SignupText = styled.p`
-  margin: 4px 0 0;
-  text-align: center;
-  font-size: 12px;
-  color: #617285;
+const ErrorMessage = styled.div`
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 120, 120, 0.3);
+  background: rgba(255, 110, 110, 0.1);
+  color: #ffa3a3;
+  font-size: 13px;
+  line-height: 1.45;
 `;
 
-const SignupLink = styled(Link)`
-  color: #00f0ff;
-  text-decoration: none;
+const SubmitButton = styled.button`
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #1683d8, #3fa4f0 50%, #1683d8);
+  background-size: 200% 100%;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.3s ease,
+    background-position 0.6s ease;
 
-  &:hover { text-decoration: underline; }
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background-position: 100% 0;
+    box-shadow: 0 8px 25px rgba(22, 131, 216, 0.4);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #6cc3ff;
+    outline-offset: 3px;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+`;
+
+const BottomText = styled.p`
+  margin-top: 22px;
+  text-align: center;
+  font-size: 13px;
+  color: #9aa7b8;
 `;
